@@ -122,7 +122,7 @@ function predict(){
  const tabs=Object.keys(SP).map(k=>`<button class="${k===P.s?'on':''}" style="--c:${SP[k].c}" onclick="P.s='${k}';P.mi='';P.win='';go()">${SP[k].e} ${SP[k].n}</button>`).join('');
  const form=ms.length?`<div class="box"><label>اسم شما<input class="in" value="${esc(P.name)}" oninput="P.name=this.value" placeholder="نام و نام خانوادگی"></label>
  <label>بازی<select class="in" onchange="P.mi=this.value;P.win='';go()"><option value="">انتخاب کنید</option>${ms.map((x,i)=>`<option value="${i}" ${P.mi==i&&P.mi!==''?'selected':''}>${esc(x.a)} VS ${esc(x.b)} — ${esc(x.d)} ${esc(x.t)}</option>`).join('')}</select></label>
- ${m?`<label>${P.s==='pingpong'?'بازیکن برنده':'تیم برنده'}<select class="in" onchange="P.win=this.value"><option value="">انتخاب کنید</option>${[m.a,m.b].map(x=>`<option ${P.win===x?'selected':''}>${esc(x)}</option>`).join('')}</select></label>`:''}
+ ${m?`<label>${P.s==='pingpong'?'بازیکن برنده':'تیم برنده'}<select class="in" onchange="P.win=this.value"><option value="">انتخاب کنید</option>${(P.s==='football'?[m.a,m.b,'مساوی']:[m.a,m.b]).map(x=>`<option ${P.win===x?'selected':''}>${esc(x)}</option>`).join('')}</select></label>`:''}
  ${P.s==='football'?`<label>نتیجه بازی<div style="display:flex;align-items:center;gap:6px;font-weight:700">${m?`<span style="flex:1;text-align:center">${esc(m.a)}</span>`:''}<input class="in num" type="number" min="0" value="${esc(P.g1)}" oninput="P.g1=this.value"><b>-</b><input class="in num" type="number" min="0" value="${esc(P.g2)}" oninput="P.g2=this.value">${m?`<span style="flex:1;text-align:center">${esc(m.b)}</span>`:''}</div></label>`:''}
  <button class="btn" id="sb" onclick="send()">📨 ارسال پیش‌بینی</button></div>`:'<p class="empty">هنوز بازی‌ای برای این رشته ثبت نشده 🙂</p>';
  return `<div class="tabs">${tabs}</div>`+form}
@@ -130,6 +130,7 @@ function predict(){
 async function send(){
  const m=D[P.s].m.filter(x=>x.a&&x.b)[P.mi],b=document.getElementById('sb');
  if(!P.name||!m||!P.win||(P.s==='football'&&(P.g1===''||P.g2==='')))return alert('همه‌ی قسمت‌ها را پر کنید');
+ {const a=+P.g1,c=+P.g2;if(P.s==='football'&&(P.win==='مساوی'?a!==c:P.win===m.a?!(a>c):!(c>a)))return alert('نتیجه‌ای که نوشتی با برنده‌ی انتخابی یکی نیست. اگر «مساوی» را انتخاب کردی گل‌ها باید برابر باشند و اگر یک تیم را برنده زدی گل‌های او باید بیشتر باشد.')}
  const game=m.a+' VS '+m.b+' ('+m.d+' '+m.t+')',msg='نام: '+P.name+'\nرشته: '+SP[P.s].n+'\nبازی: '+game+'\nبرنده: '+P.win+(P.s==='football'?'\nنتیجه: '+m.a+' '+P.g1+' - '+P.g2+' '+m.b:'');
  b.disabled=true;b.textContent='⏳ در حال ارسال...';
  try{const r=await fetch('https://api.web3forms.com/submit',{method:'POST',headers:{'Content-Type':'application/json',Accept:'application/json'},body:JSON.stringify({access_key:'561291b9-ebec-4ed4-8b0f-08bb1f06d7ae',subject:'پیش‌بینی نوید کاپ',from_name:'نوید کاپ',name:P.name,sport:SP[P.s].n,game:game,winner:P.win,score:P.s==='football'?P.g1+'-'+P.g2:'',message:msg})}),j=await r.json();
